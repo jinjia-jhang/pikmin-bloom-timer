@@ -11,11 +11,9 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="皮克敏計時器">
     
-    <!-- 核心優化：使用內嵌向量 SVG 作為圖示，永不破圖 -->
+    <!-- 核心優化：內嵌向量 SVG 作為圖示 -->
     <script>
         const MUSHROOM_SVG = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M15,55 Q15,15 50,15 Q85,15 85,55 L15,55' fill='%23ff4444'/%3E%3Ccircle cx='32' cy='30' r='6' fill='white'/%3E%3Ccircle cx='50' cy='42' r='5' fill='white'/%3E%3Ccircle cx='68' cy='30' r='6' fill='white'/%3E%3Crect x='40' y='55' width='20' height='30' rx='8' fill='%23fff5e6'/%3E%3C/svg%3E`;
-        
-        // 動態注入圖示
         document.write(`<link rel="icon" href="${MUSHROOM_SVG}">`);
         document.write(`<link rel="apple-touch-icon" href="${MUSHROOM_SVG}">`);
     </script>
@@ -39,21 +37,20 @@
         }
     </style>
 </head>
-<body class="safe-pb text-slate-900 text-left">
+<body class="safe-pb text-slate-900 text-left relative">
     <div id="app" v-cloak class="max-w-md mx-auto p-5 safe-pt">
         
         <!-- Header -->
         <header class="mb-6 text-left">
             <h1 class="text-2xl font-900 text-blue-900 mb-4 flex items-center gap-2">
-                <!-- 直接使用內嵌 SVG -->
                 <img :src="iconSvg" class="w-10 h-10"> 
-                Pikmin Bloom v16
+                Pikmin Bloom 蘑菇計時器
             </h1>
             
             <div class="bg-white/80 backdrop-blur-md rounded-3xl p-5 border border-blue-100 shadow-sm space-y-4">
                 <div class="flex items-center justify-between">
-                    <div class="flex flex-col">
-                        <span class="text-[11px] font-black text-blue-800/50 uppercase tracking-widest">目前系統時間</span>
+                    <div class="flex flex-col text-left">
+                        <span class="text-[11px] font-black text-blue-800/50 uppercase tracking-widest leading-none mb-1">目前系統時間</span>
                         <span class="text-2xl font-mono font-900 text-blue-900 leading-none">{{ currentTimeDisplay }}</span>
                     </div>
                     <div class="flex gap-2">
@@ -67,7 +64,7 @@
                 </div>
 
                 <div class="pt-4 border-t border-blue-50 flex items-center justify-between">
-                    <div class="flex flex-col">
+                    <div class="flex flex-col text-left">
                         <span class="text-[11px] font-black text-teal-700 uppercase tracking-widest">地圖刷新週期 (秒)</span>
                         <p class="text-[10px] text-slate-400 font-bold">對齊遊戲週期秒數</p>
                     </div>
@@ -85,10 +82,10 @@
             <div class="space-y-5">
                 <div>
                     <label class="block text-sm font-900 text-blue-900 mb-2 ml-1 uppercase tracking-wider">蘑菇地點</label>
-                    <input v-model="form.name" type="text" placeholder="輸入地點名稱..." class="w-full border-2 border-blue-50 bg-blue-50/50 rounded-2xl px-4 py-3.5 focus:ring-4 focus:ring-blue-100 outline-none font-bold text-blue-900">
+                    <input v-model="form.name" type="text" placeholder="例如：大安紅菇..." class="w-full border-2 border-blue-50 bg-blue-50/50 rounded-2xl px-4 py-3.5 focus:ring-4 focus:ring-blue-100 outline-none font-bold text-blue-900 transition-all">
                 </div>
                 
-                <div class="flex gap-4">
+                <div class="flex gap-4 text-left">
                     <div class="flex-1">
                         <label class="block text-sm font-900 text-blue-900 mb-2 ml-1">戰鬥分</label>
                         <input v-model.number="form.min" type="number" class="w-full border-2 border-blue-50 bg-blue-50/50 rounded-2xl px-4 py-3.5 outline-none font-900 text-blue-900">
@@ -99,7 +96,7 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-2 gap-4 text-left">
                     <div class="bg-teal-50/40 p-3 rounded-2xl border border-teal-50">
                         <label class="block text-[10px] font-900 text-teal-800 uppercase mb-1 ml-1">重生冷卻 (秒)</label>
                         <input v-model.number="form.respawnDuration" type="number" class="w-full bg-white border-2 border-teal-100 rounded-xl px-2 py-2 text-center font-900 text-teal-900 outline-none">
@@ -128,7 +125,7 @@
                                 {{ m.phase === 1 ? '⚔️ 戰鬥中' : '✨ 重生中' }}
                             </span>
                         </div>
-                        <button @click="deleteMushroom(m.id)" class="text-slate-300 hover:text-red-500 p-2"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" /></svg></button>
+                        <button @click="deleteMushroom(m.id)" class="text-slate-300 hover:text-red-500 p-2 transition-colors"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" /></svg></button>
                     </div>
 
                     <div class="flex items-baseline gap-2 mb-5 relative z-10 mt-3">
@@ -136,14 +133,13 @@
                         <span class="text-sm font-900 text-slate-400 uppercase tracking-tighter">{{ m.phase === 1 ? '後結束' : '後重生' }}</span>
                     </div>
 
-                    <!-- 地圖刷新點顯示區 -->
                     <div v-if="m.phase === 2 && !m.isExpired" class="bg-teal-50 rounded-3xl p-4 border border-teal-100 relative z-10 shadow-inner">
                         <div class="flex items-center gap-2 mb-3">
                             <span class="flex h-2 w-2 rounded-full bg-teal-500 animate-pulse"></span>
                             <span class="text-[10px] font-black text-teal-800 uppercase tracking-widest">地圖刷新點 ({{ globalTick }}s)</span>
                         </div>
                         <div class="grid grid-cols-2 gap-3 font-mono font-900 text-teal-800 text-center">
-                            <div :key="m.nextTick" class="bg-white p-3 rounded-2xl text-base border border-teal-100 shadow-sm transition-all animate-ripple">
+                            <div :key="m.nextTick" class="bg-white p-3 rounded-2xl text-base border border-teal-100 shadow-sm animate-ripple">
                                 {{ m.nextTick }}
                             </div>
                             <div class="bg-white/50 p-3 rounded-2xl text-base border border-teal-50 text-slate-400">
@@ -152,12 +148,10 @@
                         </div>
                     </div>
 
-                    <!-- 進度條 -->
                     <div class="absolute bottom-0 left-0 h-2.5 bg-slate-50 w-full overflow-hidden">
                         <div :class="m.phase === 2 ? 'bg-teal-500' : 'bg-blue-500'" class="h-full transition-all duration-1000 shadow-sm" :style="{ width: m.progress + '%' }"></div>
                     </div>
 
-                    <!-- 已過期遮罩 -->
                     <div v-if="m.isExpired" class="absolute inset-0 bg-white/95 backdrop-blur-md flex flex-col items-center justify-center z-20">
                         <div class="bg-white p-6 rounded-3xl shadow-xl border border-teal-100 flex flex-col items-center">
                             <img :src="iconSvg" class="w-16 h-16 mb-2">
@@ -173,6 +167,11 @@
                 <p class="text-blue-900/30 font-900 tracking-widest uppercase text-sm">等待計時...</p>
             </div>
         </div>
+
+        <!-- 浮動版號顯示：固定於右下角 -->
+        <div class="fixed bottom-2 right-4 text-[10px] font-black text-blue-900/20 pointer-events-none tracking-widest safe-pb">
+            VER 16.0
+        </div>
     </div>
 
     <script>
@@ -186,7 +185,6 @@
                 const globalTick = ref(8);
                 const form = ref({ name: '', min: 0, sec: 0, notify: true, advance: 30, respawnDuration: 300 });
 
-                // 內嵌圖示變數，與 HTML 頭部共用
                 const iconSvg = MUSHROOM_SVG;
 
                 const currentTimeDisplay = computed(() => {
@@ -224,14 +222,14 @@
                         navigator.serviceWorker.ready.then(reg => {
                             reg.showNotification(title, {
                                 body,
-                                icon: iconSvg, // 注意：部分瀏覽器可能不支援通知中使用 Data URI
+                                icon: iconSvg,
                                 vibrate: [200, 100, 200]
                             });
                         });
                     }
                 };
 
-                const testNotification = () => sendNotification("測試通知", "向量圖示版運作正常！🍄");
+                const testNotification = () => sendNotification("測試通知", "通知系統正常運作中 🍄");
 
                 const addMushroom = () => {
                     const battleDurationMs = (form.value.min * 60 + form.value.sec) * 1000;
