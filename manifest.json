@@ -1,0 +1,21 @@
+{
+  "name": "Pikmin Bloom 蘑菇計時器",
+  "short_name": "皮克敏計時",
+  "description": "專為皮克敏設計的蘑菇重生計時器",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#e0f2fe",
+  "theme_color": "#2563eb",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/3579/3579186.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/3579/3579186.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
