@@ -1,35 +1,27 @@
-const CACHE_NAME = 'pikmin-timer-v1';
+const CACHE_NAME = 'pikmin-timer-v6';
 const ASSETS = [
   './',
   './index.html',
   './manifest.json'
 ];
 
-// 安裝並快取資源
-self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS))
+self.addEventListener('install', (e) => {
+  e.waitUntil(
+    caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS))
   );
 });
 
-// 啟動時清理舊快取
-self.addEventListener('activate', (event) => {
-  event.waitUntil(clients.claim());
-});
-
-// 攔截請求
-self.addEventListener('fetch', (event) => {
-  event.respondWith(
-    caches.match(event.request).then((response) => response || fetch(event.request))
+self.addEventListener('fetch', (e) => {
+  e.respondWith(
+    caches.match(e.request).then(res => res || fetch(e.request))
   );
 });
 
-// 監聽通知點擊
-self.addEventListener('notificationclick', (event) => {
-  event.notification.close();
-  event.waitUntil(
-    clients.matchAll({ type: 'window' }).then((clientList) => {
-      if (clientList.length > 0) return clientList[0].focus();
+self.addEventListener('notificationclick', (e) => {
+  e.notification.close();
+  e.waitUntil(
+    clients.matchAll({ type: 'window' }).then(clients => {
+      if (clients.length > 0) return clients[0].focus();
       return clients.openWindow('./');
     })
   );

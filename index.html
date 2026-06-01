@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Pikmin Bloom 蘑菇計時器</title>
     
-    <!-- PWA Manifest & iOS Meta -->
+    <!-- PWA Manifest 使用相對路徑 -->
     <link rel="manifest" href="manifest.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -27,8 +27,6 @@
         .bg-pb-teal { background-color: #26d1c2; }
         .card-shadow { box-shadow: 0 10px 30px -10px rgba(7, 89, 133, 0.15); }
         [v-cloak] { display: none; }
-        
-        /* PWA 滿版調整 */
         @supports (padding: env(safe-area-inset-top)) {
             .safe-pt { padding-top: env(safe-area-inset-top); }
             .safe-pb { padding-bottom: env(safe-area-inset-bottom); }
@@ -44,7 +42,6 @@
                 <span class="text-3xl">🍄</span> Pikmin Bloom 計時器
             </h1>
             
-            <!-- 系統時鐘與通知按鈕並列 -->
             <div class="flex items-center justify-between bg-white/80 backdrop-blur-md rounded-3xl p-4 border border-blue-100 shadow-sm">
                 <div class="flex flex-col">
                     <span class="text-[11px] font-black text-blue-800/50 uppercase tracking-widest">目前系統時間</span>
@@ -137,18 +134,18 @@
                         </span>
                     </div>
 
-                    <!-- 8s Tick Anchor (僅重生階段顯示) -->
+                    <!-- 8s Tick Anchor -->
                     <div v-if="m.phase === 2 && !m.isExpired" class="bg-teal-50 rounded-3xl p-4 border border-teal-100 relative z-10 shadow-inner">
                         <div class="flex items-center gap-2 mb-3">
-                            <span class="flex h-2 w-2 rounded-full bg-teal-500 animate-ping"></span>
+                            <span class="flex h-2 w-2 rounded-full bg-teal-400 animate-ping"></span>
                             <span class="text-[11px] font-900 text-teal-800 uppercase tracking-widest">地圖刷新對齊點</span>
                         </div>
                         <div class="grid grid-cols-2 gap-3">
-                            <div class="bg-white rounded-2xl py-3 px-4 shadow-sm border border-teal-50">
+                            <div class="bg-white rounded-2xl py-3 px-4 shadow-sm border border-teal-100">
                                 <p class="text-[10px] font-black text-teal-500 uppercase mb-1">下次刷新</p>
                                 <p class="font-mono font-900 text-base text-teal-800">{{ m.nextTick }}</p>
                             </div>
-                            <div class="bg-white rounded-2xl py-3 px-4 shadow-sm border border-teal-50">
+                            <div class="bg-white rounded-2xl py-3 px-4 shadow-sm border border-teal-100">
                                 <p class="text-[10px] font-black text-slate-400 uppercase mb-1">再下次</p>
                                 <p class="font-mono font-900 text-base text-slate-500">{{ m.nextNextTick }}</p>
                             </div>
@@ -180,15 +177,6 @@
         </div>
     </div>
 
-    <style>
-        .toggle-checkbox:checked { right: 0; border-color: #2563eb; }
-        .toggle-checkbox:checked + .toggle-label { background-color: #2563eb; }
-        .list-enter-active, .list-leave-active { transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); }
-        .list-enter-from, .list-leave-to { opacity: 0; transform: scale(0.9) translateY(20px); }
-        .list-move { transition: transform 0.6s ease; }
-        input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; }
-    </style>
-
     <script>
         const { createApp, ref, onMounted, onUnmounted, computed } = Vue;
 
@@ -204,7 +192,6 @@
                     return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}:${String(d.getSeconds()).padStart(2, '0')}`;
                 });
 
-                // --- 核心音效 ---
                 const playBeep = (freq = 880) => {
                     try {
                         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -220,7 +207,6 @@
                     } catch (e) {}
                 };
 
-                // --- PWA 與 背景功能 ---
                 const requestPermission = async () => {
                     const result = await Notification.requestPermission();
                     permissionStatus.value = result;
@@ -237,19 +223,16 @@
                             });
                         });
                     }
-                    playBeep(880);
                 };
 
                 const setupWakeLock = async () => {
                     try {
                         if ('wakeLock' in navigator) {
                             await navigator.wakeLock.request('screen');
-                            console.log("Wake Lock active");
                         }
                     } catch (err) {}
                 };
 
-                // --- 計時邏輯 ---
                 const addMushroom = () => {
                     const battleDurationMs = (form.value.min * 60 + form.value.sec) * 1000;
                     if (battleDurationMs <= 0 && form.value.name === '') return;
@@ -276,13 +259,13 @@
                 };
 
                 const saveData = () => {
-                    localStorage.setItem('pikmin_mushrooms_v5_pwa', JSON.stringify(mushrooms.value));
+                    localStorage.setItem('pikmin_mushrooms_v6_pwa', JSON.stringify(mushrooms.value));
                 };
 
                 const sortedMushrooms = computed(() => {
                     return [...mushrooms.value].sort((a, b) => {
                         if (a.isExpired !== b.isExpired) return a.isExpired ? 1 : -1;
-                        if (a.phase !== b.phase) return b.phase - a.phase; // Phase 2 (重生中) 優先
+                        if (a.phase !== b.phase) return b.phase - a.phase;
                         const aTarget = a.phase === 1 ? a.battleEndTime : a.respawnEndTime;
                         const bTarget = b.phase === 1 ? b.battleEndTime : b.respawnEndTime;
                         return aTarget - bTarget;
@@ -308,14 +291,12 @@
                             const diff = m.respawnEndTime - now;
                             m.displayTime = formatTime(diff);
                             m.progress = (diff / 300000) * 100;
-
                             const cycleMs = 8000;
                             const timeToTarget = m.respawnEndTime - now;
                             let nextTickTs = now + (timeToTarget % cycleMs);
                             if (nextTickTs < now) nextTickTs += cycleMs;
                             m.nextTick = formatTimestamp(nextTickTs);
                             m.nextNextTick = formatTimestamp(nextTickTs + cycleMs);
-
                             const advanceMs = m.advanceSeconds * 1000;
                             if (m.notify && !m.respawnNotified && diff <= advanceMs) {
                                 sendNotification(`🍄 重生預警！`, `${m.name} 將在 ${m.advanceSeconds} 秒後重生！`);
@@ -343,14 +324,17 @@
 
                 let timerInterval;
                 onMounted(() => {
-                    const saved = localStorage.getItem('pikmin_mushrooms_v5_pwa');
+                    const saved = localStorage.getItem('pikmin_mushrooms_v6_pwa');
                     if (saved) mushrooms.value = JSON.parse(saved);
                     timerInterval = setInterval(updateTimers, 1000);
                     updateTimers();
 
-                    // 註冊 Service Worker
+                    // --- 重要：GitHub Pages 子目錄 PWA 註冊邏輯 ---
                     if ('serviceWorker' in navigator) {
-                        navigator.serviceWorker.register('sw.js');
+                        const base = window.location.pathname.split('/').slice(0, -1).join('/') + '/';
+                        navigator.serviceWorker.register(base + 'sw.js', { scope: base })
+                            .then(() => console.log("SW Registered at:", base))
+                            .catch(err => console.error("SW Registration failed:", err));
                     }
                     setupWakeLock();
                 });
