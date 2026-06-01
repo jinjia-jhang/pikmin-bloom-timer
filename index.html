@@ -21,6 +21,16 @@
         body { font-family: 'Noto Sans TC', sans-serif; background: linear-gradient(135deg, #e0f2fe 0%, #f0fdfa 100%); min-height: 100vh; }
         [v-cloak] { display: none; }
         .card-shadow { box-shadow: 0 10px 30px -10px rgba(7, 89, 133, 0.15); }
+        
+        /* 刷新點水波紋特效 */
+        @keyframes tick-ripple {
+            0% { transform: scale(1); background-color: rgba(38, 209, 194, 0.4); }
+            100% { transform: scale(1.05); background-color: white; }
+        }
+        .animate-ripple {
+            animation: tick-ripple 0.5s ease-out forwards;
+        }
+
         input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; }
         @supports (padding: env(safe-area-inset-top)) {
             .safe-pt { padding-top: env(safe-area-inset-top); }
@@ -38,7 +48,6 @@
             </h1>
             
             <div class="bg-white/80 backdrop-blur-md rounded-3xl p-5 border border-blue-100 shadow-sm space-y-4">
-                <!-- Row 1: Clock and Notification -->
                 <div class="flex items-center justify-between">
                     <div class="flex flex-col">
                         <span class="text-[11px] font-black text-blue-800/50 uppercase tracking-widest">目前系統時間</span>
@@ -54,16 +63,20 @@
                     </div>
                 </div>
 
-                <!-- Row 2: Global Tick Setting (New!) -->
+                <!-- Global Tick Setting: 優化輸入體驗 -->
                 <div class="pt-4 border-t border-blue-50 flex items-center justify-between">
                     <div class="flex flex-col">
-                        <span class="text-[11px] font-black text-teal-700 uppercase tracking-widest">地圖刷新週期 (對齊秒數)</span>
-                        <p class="text-[10px] text-slate-400 font-bold">設定每幾秒刷新一次地圖 (預設 8)</p>
+                        <span class="text-[11px] font-black text-teal-700 uppercase tracking-widest">地圖刷新週期 (秒)</span>
+                        <p class="text-[10px] text-slate-400 font-bold">預設 8 秒，可自由調整</p>
                     </div>
                     <div class="flex items-center gap-2">
-                        <input v-model.number="globalTick" type="number" min="1" max="60"
-                            class="w-16 bg-blue-50 border-2 border-blue-100 rounded-xl px-2 py-2 text-center font-900 text-blue-900 outline-none focus:border-teal-400">
-                        <span class="font-bold text-blue-900">秒</span>
+                        <input 
+                            :value="globalTick"
+                            @input="handleTickInput"
+                            @blur="handleTickBlur"
+                            type="number" 
+                            class="w-16 bg-blue-50 border-2 border-blue-100 rounded-xl px-2 py-2 text-center font-900 text-blue-900 outline-none focus:border-teal-400 transition-colors">
+                        <span class="font-bold text-blue-900 text-sm">秒</span>
                     </div>
                 </div>
             </div>
@@ -78,11 +91,11 @@
                 </div>
                 <div class="flex gap-4">
                     <div class="flex-1">
-                        <label class="block text-sm font-900 text-blue-900 mb-2 ml-1">剩餘分鐘</label>
+                        <label class="block text-sm font-900 text-blue-900 mb-2 ml-1">分鐘</label>
                         <input v-model.number="form.min" type="number" class="w-full border-2 border-blue-50 bg-blue-50/50 rounded-2xl px-4 py-3.5 outline-none focus:ring-4 focus:ring-blue-100 text-xl font-900 text-blue-900">
                     </div>
                     <div class="flex-1">
-                        <label class="block text-sm font-900 text-blue-900 mb-2 ml-1">剩餘秒數</label>
+                        <label class="block text-sm font-900 text-blue-900 mb-2 ml-1">秒數</label>
                         <input v-model.number="form.sec" type="number" class="w-full border-2 border-blue-50 bg-blue-50/50 rounded-2xl px-4 py-3.5 outline-none focus:ring-4 focus:ring-blue-100 text-xl font-900 text-blue-900">
                     </div>
                 </div>
@@ -100,7 +113,7 @@
                     <div class="flex justify-between items-start relative z-10">
                         <div>
                             <h3 class="font-900 text-blue-950 text-xl leading-tight">{{ m.name || '未命名' }}</h3>
-                            <span :class="m.phase === 2 ? 'bg-teal-500' : 'bg-blue-500'" class="inline-block mt-2 text-white text-[10px] px-3 py-1 rounded-full uppercase font-black">
+                            <span :class="m.phase === 2 ? 'bg-teal-500 shadow-md shadow-teal-100' : 'bg-blue-500'" class="inline-block mt-2 text-white text-[10px] px-3 py-1 rounded-full uppercase font-black">
                                 {{ m.phase === 1 ? '⚔️ 戰鬥中' : '✨ 重生中' }}
                             </span>
                         </div>
@@ -108,28 +121,33 @@
                     </div>
 
                     <div class="flex items-baseline gap-2 mb-5 relative z-10 mt-3">
-                        <span class="text-5xl font-900 tabular-nums tracking-tighter" :class="m.phase === 2 ? 'text-teal-600' : 'text-blue-600'">{{ m.displayTime }}</span>
+                        <span class="text-5xl font-900 tabular-nums tracking-tighter" :class="m.phase === 2 ? 'text-teal-600 font-black' : 'text-blue-600'">{{ m.displayTime }}</span>
                         <span class="text-sm font-900 text-slate-400">{{ m.phase === 1 ? '後結束' : '後重生' }}</span>
                     </div>
 
-                    <!-- 動態對齊秒數顯示區 -->
+                    <!-- 地圖刷新點顯示區 -->
                     <div v-if="m.phase === 2 && !m.isExpired" class="bg-teal-50 rounded-3xl p-4 border border-teal-100 relative z-10 shadow-inner">
-                        <div class="flex justify-between items-center mb-2">
-                            <span class="text-[10px] font-black text-teal-800 uppercase tracking-widest flex items-center gap-1">
-                                <span class="flex h-1.5 w-1.5 rounded-full bg-teal-500 animate-ping"></span>
-                                地圖刷新點 (每 {{ globalTick }}s)
-                            </span>
+                        <div class="flex items-center gap-2 mb-3">
+                            <span class="flex h-2 w-2 rounded-full bg-teal-500 animate-pulse"></span>
+                            <span class="text-[10px] font-black text-teal-800 uppercase tracking-widest">地圖刷新點 ({{ globalTick }}s)</span>
                         </div>
                         <div class="grid grid-cols-2 gap-3 font-mono font-900 text-teal-800 text-center">
-                            <div class="bg-white p-2 rounded-xl text-sm border border-teal-100 shadow-sm">{{ m.nextTick }}</div>
-                            <div class="bg-white p-2 rounded-xl text-sm border border-teal-100 shadow-sm">{{ m.nextNextTick }}</div>
+                            <!-- 當 nextTick 改變時，觸發 animate-ripple -->
+                            <div :key="m.nextTick" class="bg-white p-3 rounded-2xl text-base border border-teal-100 shadow-sm transition-all animate-ripple">
+                                {{ m.nextTick }}
+                            </div>
+                            <div class="bg-white/50 p-3 rounded-2xl text-base border border-teal-50 text-slate-400">
+                                {{ m.nextNextTick }}
+                            </div>
                         </div>
                     </div>
 
-                    <div class="absolute bottom-0 left-0 h-2.5 bg-slate-100 w-full overflow-hidden">
+                    <!-- 進度條 -->
+                    <div class="absolute bottom-0 left-0 h-2.5 bg-slate-50 w-full overflow-hidden">
                         <div :class="m.phase === 2 ? 'bg-teal-500' : 'bg-blue-500'" class="h-full transition-all duration-1000" :style="{ width: m.progress + '%' }"></div>
                     </div>
 
+                    <!-- 已過期遮罩 -->
                     <div v-if="m.isExpired" class="absolute inset-0 bg-white/95 backdrop-blur-md flex flex-col items-center justify-center z-20">
                         <p class="text-teal-700 font-900 text-xl mb-4">🍄 重生完成！</p>
                         <button @click="deleteMushroom(m.id)" class="text-sm font-900 bg-blue-600 text-white px-8 py-3 rounded-2xl shadow-lg">移除紀錄</button>
@@ -147,7 +165,7 @@
                 const mushrooms = ref([]);
                 const permissionStatus = ref('default');
                 const currentTime = ref(new Date());
-                const globalTick = ref(8); // 全局對齊秒數設定
+                const globalTick = ref(8); // 全局設定
                 const form = ref({ name: '', min: 0, sec: 0, notify: true, advance: 30 });
 
                 const currentTimeDisplay = computed(() => {
@@ -155,22 +173,32 @@
                     return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}:${String(d.getSeconds()).padStart(2, '0')}`;
                 });
 
-                // 監聽 globalTick 變化並存入 LocalStorage
-                watch(globalTick, (newVal) => {
-                    if (newVal < 1) globalTick.value = 1;
-                    localStorage.setItem('pikmin_global_tick', newVal);
-                });
+                // --- 1. 優化輸入體驗邏輯 ---
+                const handleTickInput = (e) => {
+                    const val = e.target.value;
+                    if (val === '') return; // 允許刪除變空
+                    const num = parseInt(val);
+                    if (!isNaN(num) && num > 0) {
+                        globalTick.value = num;
+                        localStorage.setItem('pikmin_global_tick', num);
+                    }
+                };
 
+                const handleTickBlur = (e) => {
+                    if (e.target.value === '' || parseInt(e.target.value) <= 0) {
+                        // 如果失去焦點時為空，還原為原本的數字或預設 8
+                        const saved = localStorage.getItem('pikmin_global_tick');
+                        globalTick.value = saved ? parseInt(saved) : 8;
+                        e.target.value = globalTick.value;
+                    }
+                };
+
+                // --- 通用功能 ---
                 const requestPermission = async () => {
                     if ('Notification' in window) {
                         const result = await Notification.requestPermission();
                         permissionStatus.value = result;
-                        if (result === 'granted') sendNotification("通知已啟用", "現在你可以收到重生提醒了！");
                     }
-                };
-
-                const testNotification = () => {
-                    sendNotification("測試通知", "看到這個代表你的 PWA 通知運作正常！🍄");
                 };
 
                 const sendNotification = (title, body) => {
@@ -186,9 +214,11 @@
                     }
                 };
 
+                const testNotification = () => sendNotification("測試通知", "這是一個水波紋特效測試！🍄");
+
                 const addMushroom = () => {
                     const battleDurationMs = (form.value.min * 60 + form.value.sec) * 1000;
-                    if (battleDurationMs <= 0 && !form.value.name) return;
+                    if (battleDurationMs <= 0 && !form.name) return;
                     const now = Date.now();
                     mushrooms.value.push({
                         id: now,
@@ -209,9 +239,7 @@
                     saveData();
                 };
 
-                const saveData = () => {
-                    localStorage.setItem('pikmin_v9', JSON.stringify(mushrooms.value));
-                };
+                const saveData = () => localStorage.setItem('pikmin_v10', JSON.stringify(mushrooms.value));
 
                 const sortedMushrooms = computed(() => {
                     return [...mushrooms.value].sort((a, b) => {
@@ -254,11 +282,14 @@
                             m.displayTime = formatTime(diff);
                             m.progress = (diff / 300000) * 100;
 
-                            // 核心修正：動態計算對齊點
+                            // 刷新週期點計算
                             let nextTickTs = now + (diff % cycleMs);
-                            if (nextTickTs < now) nextTickTs += cycleMs;
+                            if (nextTickTs <= now) nextTickTs += cycleMs;
                             
-                            m.nextTick = formatTs(nextTickTs);
+                            const newNextTick = formatTs(nextTickTs);
+                            
+                            // 這裡 Vue 的 :key 會偵測 m.nextTick 的變化自動觸發 animate-ripple
+                            m.nextTick = newNextTick;
                             m.nextNextTick = formatTs(nextTickTs + cycleMs);
 
                             if (m.notify && !m.respawnNotified && diff <= (m.advanceSeconds * 1000)) {
@@ -267,16 +298,13 @@
                             }
                         } else {
                             m.isExpired = true;
-                            m.displayTime = "00:00";
-                            m.progress = 0;
                         }
                     });
                 };
 
                 onMounted(() => {
-                    const saved = localStorage.getItem('pikmin_v9');
+                    const saved = localStorage.getItem('pikmin_v10');
                     if (saved) mushrooms.value = JSON.parse(saved);
-
                     const savedTick = localStorage.getItem('pikmin_global_tick');
                     if (savedTick) globalTick.value = parseInt(savedTick);
 
@@ -290,7 +318,11 @@
                     if ('wakeLock' in navigator) navigator.wakeLock.request('screen').catch(()=>{});
                 });
 
-                return { globalTick, form, mushrooms, sortedMushrooms, permissionStatus, currentTimeDisplay, addMushroom, deleteMushroom, requestPermission, testNotification };
+                return { 
+                    globalTick, form, mushrooms, sortedMushrooms, permissionStatus, 
+                    currentTimeDisplay, addMushroom, deleteMushroom, requestPermission, 
+                    testNotification, handleTickInput, handleTickBlur 
+                };
             }
         }).mount('#app');
     </script>
