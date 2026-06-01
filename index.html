@@ -5,8 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Pikmin Bloom 蘑菇計時器</title>
     
-    <!-- PWA Manifest 使用相對路徑 -->
+    <!-- PWA -->
     <link rel="manifest" href="manifest.json">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="皮克敏計時">
@@ -21,12 +22,10 @@
             font-family: 'Noto Sans TC', sans-serif; 
             background: linear-gradient(135deg, #e0f2fe 0%, #f0fdfa 100%);
             min-height: 100vh;
-            -webkit-tap-highlight-color: transparent;
         }
-        .text-pb-teal { color: #1e9d91; }
-        .bg-pb-teal { background-color: #26d1c2; }
-        .card-shadow { box-shadow: 0 10px 30px -10px rgba(7, 89, 133, 0.15); }
+        /* 防止 Vue 載入失敗導致永久空白，加入一個 0.5s 後自動顯示的機制 */
         [v-cloak] { display: none; }
+        .card-shadow { box-shadow: 0 10px 30px -10px rgba(7, 89, 133, 0.15); }
         @supports (padding: env(safe-area-inset-top)) {
             .safe-pt { padding-top: env(safe-area-inset-top); }
             .safe-pb { padding-bottom: env(safe-area-inset-bottom); }
@@ -81,20 +80,20 @@
 
                 <div class="flex items-center justify-between pt-2 bg-blue-50/40 p-4 rounded-2xl">
                     <div class="flex flex-col ml-1">
-                        <span class="text-xs font-900 text-blue-800 uppercase">重生前通知 (秒)</span>
+                        <span class="text-xs font-900 text-blue-800 uppercase">提前通知 (秒)</span>
                         <input v-model.number="form.advance" type="number" class="w-16 bg-transparent border-b-2 border-blue-200 text-center font-900 py-1 outline-none focus:border-blue-600 text-blue-900">
                     </div>
                     <label class="flex items-center cursor-pointer group">
                         <span class="mr-3 text-sm font-900 text-blue-900">通知開關</span>
                         <div class="relative inline-block w-12 align-middle select-none">
-                            <input v-model="form.notify" type="checkbox" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 border-slate-200 appearance-none cursor-pointer right-6 checked:right-0 checked:border-blue-600 transition-all duration-300"/>
+                            <input v-model="form.notify" type="checkbox" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 border-slate-200 appearance-none cursor-pointer right-6 checked:right-0 checked:border-blue-600 transition-all duration-300 shadow-sm"/>
                             <label class="toggle-label block overflow-hidden h-6 rounded-full bg-slate-200 cursor-pointer"></label>
                         </div>
                     </label>
                 </div>
 
                 <button @click="addMushroom" class="w-full bg-blue-600/90 hover:bg-blue-600 text-white font-900 py-4 rounded-2xl transition-all transform active:scale-[0.98] shadow-lg shadow-blue-200 mt-2 tracking-widest text-lg">
-                    開始監視
+                    開始計時
                 </button>
             </div>
         </section>
@@ -116,7 +115,7 @@
                             <h3 class="font-900 text-blue-950 text-xl leading-tight">{{ m.name || '未命名蘑菇' }}</h3>
                             <div class="flex gap-2 mt-2">
                                 <span :class="m.phase === 2 ? 'bg-teal-500' : 'bg-blue-500'" class="text-white text-[10px] px-3 py-1 rounded-full uppercase font-black shadow-sm">
-                                    {{ m.phase === 1 ? '⚔️ 戰鬥中' : '✨ 重生中' }}
+                                    {{ m.phase === 1 ? '⚔️ 戰鬥中' : '✨ 即將重生' }}
                                 </span>
                             </div>
                         </div>
@@ -138,7 +137,7 @@
                     <div v-if="m.phase === 2 && !m.isExpired" class="bg-teal-50 rounded-3xl p-4 border border-teal-100 relative z-10 shadow-inner">
                         <div class="flex items-center gap-2 mb-3">
                             <span class="flex h-2 w-2 rounded-full bg-teal-400 animate-ping"></span>
-                            <span class="text-[11px] font-900 text-teal-800 uppercase tracking-widest">地圖刷新對齊點</span>
+                            <span class="text-[11px] font-900 text-teal-800 uppercase tracking-widest">地圖刷新對齊</span>
                         </div>
                         <div class="grid grid-cols-2 gap-3">
                             <div class="bg-white rounded-2xl py-3 px-4 shadow-sm border border-teal-100">
@@ -163,29 +162,39 @@
                     <!-- Expired Mask -->
                     <div v-if="m.isExpired" class="absolute inset-0 bg-white/95 backdrop-blur-md flex items-center justify-center z-20">
                         <div class="text-center">
-                            <p class="text-teal-700 font-900 text-xl mb-4">🍄 已完成重生！</p>
-                            <button @click="deleteMushroom(m.id)" class="text-sm font-900 bg-blue-600 text-white px-8 py-3 rounded-2xl shadow-lg active:scale-95">移除清單</button>
+                            <p class="text-teal-700 font-900 text-xl mb-4">🍄 重生完成！</p>
+                            <button @click="deleteMushroom(m.id)" class="text-sm font-900 bg-blue-600 text-white px-8 py-3 rounded-2xl shadow-lg active:scale-95">移除紀錄</button>
                         </div>
                     </div>
                 </div>
             </transition-group>
-
-            <div v-if="mushrooms.length === 0" class="text-center py-16 bg-white/50 rounded-[3rem] border-2 border-dashed border-blue-200">
-                <div class="text-6xl mb-4 opacity-20">🌿</div>
-                <p class="text-blue-900/30 font-900 tracking-widest uppercase text-sm">等待計時...</p>
-            </div>
         </div>
     </div>
+
+    <style>
+        .toggle-checkbox:checked { right: 0; border-color: #2563eb; }
+        .toggle-checkbox:checked + .toggle-label { background-color: #2563eb; }
+        .list-enter-active, .list-leave-active { transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        .list-enter-from, .list-leave-to { opacity: 0; transform: scale(0.9) translateY(20px); }
+        .list-move { transition: transform 0.6s ease; }
+    </style>
 
     <script>
         const { createApp, ref, onMounted, onUnmounted, computed } = Vue;
 
-        createApp({
+        const app = createApp({
             setup() {
                 const mushrooms = ref([]);
-                const permissionStatus = ref(Notification.permission);
+                const permissionStatus = ref('default');
                 const currentTime = ref(new Date());
                 const form = ref({ name: '', min: 0, sec: 0, notify: true, advance: 30 });
+
+                // 安全地獲取通知狀態，防止 Safari 報錯
+                const updatePermissionStatus = () => {
+                    if (typeof Notification !== 'undefined') {
+                        permissionStatus.value = Notification.permission;
+                    }
+                };
 
                 const currentTimeDisplay = computed(() => {
                     const d = currentTime.value;
@@ -199,7 +208,6 @@
                         const gainNode = audioCtx.createGain();
                         oscillator.connect(gainNode);
                         gainNode.connect(audioCtx.destination);
-                        oscillator.type = 'sine';
                         oscillator.frequency.setValueAtTime(freq, audioCtx.currentTime);
                         gainNode.gain.setValueAtTime(0.05, audioCtx.currentTime);
                         oscillator.start();
@@ -208,46 +216,41 @@
                 };
 
                 const requestPermission = async () => {
-                    const result = await Notification.requestPermission();
-                    permissionStatus.value = result;
-                    if (result === 'granted') playBeep(440);
+                    if (typeof Notification !== 'undefined') {
+                        const result = await Notification.requestPermission();
+                        permissionStatus.value = result;
+                    }
+                    playBeep(440);
                 };
 
                 const sendNotification = (title, body) => {
-                    if (Notification.permission === 'granted' && 'serviceWorker' in navigator) {
+                    if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
                         navigator.serviceWorker.ready.then(reg => {
-                            reg.showNotification(title, {
-                                body,
-                                icon: 'https://cdn-icons-png.flaticon.com/512/3579/3579186.png',
-                                vibrate: [200, 100, 200]
-                            });
+                            reg.showNotification(title, { body, icon: 'https://cdn-icons-png.flaticon.com/512/3579/3579186.png' });
                         });
                     }
+                    playBeep(880);
                 };
 
                 const setupWakeLock = async () => {
-                    try {
-                        if ('wakeLock' in navigator) {
-                            await navigator.wakeLock.request('screen');
-                        }
-                    } catch (err) {}
+                    if ('wakeLock' in navigator) {
+                        try { await navigator.wakeLock.request('screen'); } catch (err) {}
+                    }
                 };
 
                 const addMushroom = () => {
                     const battleDurationMs = (form.value.min * 60 + form.value.sec) * 1000;
-                    if (battleDurationMs <= 0 && form.value.name === '') return;
+                    if (battleDurationMs <= 0 && !form.value.name) return;
                     const now = Date.now();
-                    const battleEndTime = now + battleDurationMs;
-                    const respawnEndTime = battleEndTime + (5 * 60 * 1000);
-
                     mushrooms.value.push({
-                        id: Date.now(),
-                        name: form.value.name || '未命名蘑菇',
-                        battleEndTime, respawnEndTime,
+                        id: now,
+                        name: form.value.name || '未命名',
+                        battleEndTime: now + battleDurationMs,
+                        respawnEndTime: now + battleDurationMs + 300000,
                         advanceSeconds: form.value.advance,
                         notify: form.value.notify,
                         battleNotified: false, respawnNotified: false,
-                        phase: 1, displayTime: '', progress: 100, nextTick: '', nextNextTick: '', isExpired: false
+                        phase: 1, isExpired: false
                     });
                     saveData();
                     form.value.name = ''; form.value.min = 0; form.value.sec = 0;
@@ -259,31 +262,39 @@
                 };
 
                 const saveData = () => {
-                    localStorage.setItem('pikmin_mushrooms_v6_pwa', JSON.stringify(mushrooms.value));
+                    localStorage.setItem('pikmin_v7', JSON.stringify(mushrooms.value));
                 };
 
                 const sortedMushrooms = computed(() => {
                     return [...mushrooms.value].sort((a, b) => {
                         if (a.isExpired !== b.isExpired) return a.isExpired ? 1 : -1;
                         if (a.phase !== b.phase) return b.phase - a.phase;
-                        const aTarget = a.phase === 1 ? a.battleEndTime : a.respawnEndTime;
-                        const bTarget = b.phase === 1 ? b.battleEndTime : b.respawnEndTime;
-                        return aTarget - bTarget;
+                        const at = a.phase === 1 ? a.battleEndTime : a.respawnEndTime;
+                        const bt = b.phase === 1 ? b.battleEndTime : b.respawnEndTime;
+                        return at - bt;
                     });
                 });
+
+                const formatTime = (ms) => {
+                    const s = Math.max(0, Math.floor(ms / 1000));
+                    return `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
+                };
+
+                const formatTs = (ts) => {
+                    const d = new Date(ts);
+                    return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}:${String(d.getSeconds()).padStart(2,'0')}`;
+                };
 
                 const updateTimers = () => {
                     const now = Date.now();
                     currentTime.value = new Date();
-                    
                     mushrooms.value.forEach(m => {
                         if (now < m.battleEndTime) {
                             m.phase = 1;
-                            const diff = m.battleEndTime - now;
-                            m.displayTime = formatTime(diff);
-                            m.progress = (diff / (m.battleEndTime - m.id)) * 100;
-                            if (m.notify && !m.battleNotified && diff < 1000) {
-                                sendNotification(`⚔️ 戰鬥結束！`, `${m.name} 已進入重生倒數。`);
+                            m.displayTime = formatTime(m.battleEndTime - now);
+                            m.progress = ((m.battleEndTime - now) / (m.battleEndTime - m.id)) * 100;
+                            if (m.notify && !m.battleNotified && (m.battleEndTime - now) < 1000) {
+                                sendNotification(`⚔️ 戰鬥結束`, `${m.name} 進入重生倒數`);
                                 m.battleNotified = true;
                             }
                         } else if (now < m.respawnEndTime) {
@@ -291,62 +302,42 @@
                             const diff = m.respawnEndTime - now;
                             m.displayTime = formatTime(diff);
                             m.progress = (diff / 300000) * 100;
-                            const cycleMs = 8000;
-                            const timeToTarget = m.respawnEndTime - now;
-                            let nextTickTs = now + (timeToTarget % cycleMs);
-                            if (nextTickTs < now) nextTickTs += cycleMs;
-                            m.nextTick = formatTimestamp(nextTickTs);
-                            m.nextNextTick = formatTimestamp(nextTickTs + cycleMs);
-                            const advanceMs = m.advanceSeconds * 1000;
-                            if (m.notify && !m.respawnNotified && diff <= advanceMs) {
-                                sendNotification(`🍄 重生預警！`, `${m.name} 將在 ${m.advanceSeconds} 秒後重生！`);
+                            const nextTickTs = now + (diff % 8000);
+                            m.nextTick = formatTs(nextTickTs);
+                            m.nextNextTick = formatTs(nextTickTs + 8000);
+                            if (m.notify && !m.respawnNotified && diff <= (m.advanceSeconds * 1000)) {
+                                sendNotification(`🍄 重生預警`, `${m.name} 即將重生！`);
                                 m.respawnNotified = true;
                             }
                         } else {
                             m.isExpired = true;
-                            m.displayTime = "00:00";
-                            m.progress = 0;
                         }
                     });
                 };
 
-                const formatTime = (ms) => {
-                    const totalSec = Math.max(0, Math.floor(ms / 1000));
-                    const m = Math.floor(totalSec / 60);
-                    const s = totalSec % 60;
-                    return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-                };
-
-                const formatTimestamp = (ts) => {
-                    const d = new Date(ts);
-                    return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}:${String(d.getSeconds()).padStart(2, '0')}`;
-                };
-
-                let timerInterval;
                 onMounted(() => {
-                    const saved = localStorage.getItem('pikmin_mushrooms_v6_pwa');
-                    if (saved) mushrooms.value = JSON.parse(saved);
-                    timerInterval = setInterval(updateTimers, 1000);
-                    updateTimers();
-
-                    // --- 重要：GitHub Pages 子目錄 PWA 註冊邏輯 ---
-                    if ('serviceWorker' in navigator) {
-                        const base = window.location.pathname.split('/').slice(0, -1).join('/') + '/';
-                        navigator.serviceWorker.register(base + 'sw.js', { scope: base })
-                            .then(() => console.log("SW Registered at:", base))
-                            .catch(err => console.error("SW Registration failed:", err));
-                    }
-                    setupWakeLock();
+                    try {
+                        const saved = localStorage.getItem('pikmin_v7');
+                        if (saved) mushrooms.value = JSON.parse(saved);
+                        updatePermissionStatus();
+                        setInterval(updateTimers, 1000);
+                        
+                        if ('serviceWorker' in navigator) {
+                            const base = window.location.pathname.split('/').slice(0, -1).join('/') + '/';
+                            navigator.serviceWorker.register(base + 'sw.js', { scope: base });
+                        }
+                        setupWakeLock();
+                    } catch (e) { console.error("Vue Mount Error:", e); }
                 });
-
-                onUnmounted(() => clearInterval(timerInterval));
 
                 return {
                     form, mushrooms, sortedMushrooms, permissionStatus, currentTimeDisplay,
                     addMushroom, deleteMushroom, requestPermission
                 };
             }
-        }).mount('#app');
+        });
+        
+        app.mount('#app');
     </script>
 </body>
 </html>
