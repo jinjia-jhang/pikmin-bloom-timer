@@ -11,7 +11,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="皮克敏計時器">
     
-    <!-- 核心 SVG 圖示 -->
+    <!-- 內嵌向量 SVG 圖示 -->
     <script>
         const MUSHROOM_SVG = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M15,55 Q15,15 50,15 Q85,15 85,55 L15,55' fill='%23ff4444'/%3E%3Ccircle cx='32' cy='30' r='6' fill='white'/%3E%3Ccircle cx='50' cy='42' r='5' fill='white'/%3E%3Ccircle cx='68' cy='30' r='6' fill='white'/%3E%3Crect x='40' y='55' width='20' height='30' rx='8' fill='%23fff5e6'/%3E%3C/svg%3E`;
         document.write(`<link rel="icon" href="${MUSHROOM_SVG}">`);
@@ -29,7 +29,7 @@
             0% { transform: scale(1); background-color: rgba(38, 209, 194, 0.4); }
             100% { transform: scale(1.05); background-color: white; }
         }
-        .animate-ripple { animation: tick-ripple 0.5s ease-out forwards; }
+        .animate-ripple { animation: tick-ripple 0.4s ease-out forwards; }
         input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; }
         @supports (padding: env(safe-area-inset-top)) {
             .safe-pt { padding-top: env(safe-area-inset-top); }
@@ -40,14 +40,15 @@
 <body class="safe-pb text-slate-900 text-left relative">
     <div id="app" v-cloak class="max-w-md mx-auto p-5 safe-pt">
         
-        <!-- Header -->
-        <header class="mb-6 text-left">
+        <!-- Header & Global Settings -->
+        <header class="mb-6">
             <h1 class="text-2xl font-900 text-blue-900 mb-4 flex items-center gap-2">
                 <img :src="iconSvg" class="w-10 h-10"> 
                 Pikmin Bloom 蘑菇計時器
             </h1>
             
             <div class="bg-white/80 backdrop-blur-md rounded-3xl p-5 border border-blue-100 shadow-sm space-y-4">
+                <!-- Row 1: Time and Notify -->
                 <div class="flex items-center justify-between">
                     <div class="flex flex-col text-left">
                         <span class="text-[11px] font-black text-blue-800/50 uppercase tracking-widest leading-none mb-1">目前系統時間</span>
@@ -63,15 +64,17 @@
                     </div>
                 </div>
 
-                <div class="pt-4 border-t border-blue-50 flex items-center justify-between">
-                    <div class="flex flex-col text-left">
-                        <span class="text-[11px] font-black text-teal-700 uppercase tracking-widest">地圖刷新週期 (秒)</span>
-                        <p class="text-[10px] text-slate-400 font-bold">對齊遊戲週期秒數</p>
+                <!-- 修正 3: 雙週期設定區 -->
+                <div class="pt-4 border-t border-blue-50 grid grid-cols-2 gap-4">
+                    <div class="flex flex-col gap-1">
+                        <span class="text-[10px] font-black text-teal-700 uppercase tracking-widest">週期 A (秒)</span>
+                        <input :value="globalTickA" @input="e => handleTickInput(e, 'A')" @blur="e => handleTickBlur(e, 'A')" type="number" 
+                            class="w-full bg-blue-50 border-2 border-blue-100 rounded-xl px-2 py-2 text-center font-900 text-blue-900 outline-none focus:border-teal-400 transition-colors">
                     </div>
-                    <div class="flex items-center gap-2">
-                        <input :value="globalTick" @input="handleTickInput" @blur="handleTickBlur" type="number" 
-                            class="w-16 bg-blue-50 border-2 border-blue-100 rounded-xl px-2 py-2 text-center font-900 text-blue-900 outline-none focus:border-teal-400 transition-colors">
-                        <span class="font-bold text-blue-900 text-sm">秒</span>
+                    <div class="flex flex-col gap-1">
+                        <span class="text-[10px] font-black text-blue-700 uppercase tracking-widest">週期 B (秒)</span>
+                        <input :value="globalTickB" @input="e => handleTickInput(e, 'B')" @blur="e => handleTickBlur(e, 'B')" type="number" 
+                            class="w-full bg-blue-50 border-2 border-blue-100 rounded-xl px-2 py-2 text-center font-900 text-blue-900 outline-none focus:border-blue-400 transition-colors">
                     </div>
                 </div>
             </div>
@@ -85,7 +88,7 @@
                     <input v-model="form.name" type="text" placeholder="例如：大安紅菇..." class="w-full border-2 border-blue-50 bg-blue-50/50 rounded-2xl px-4 py-3.5 focus:ring-4 focus:ring-blue-100 outline-none font-bold text-blue-900 transition-all">
                 </div>
                 
-                <div class="flex gap-4 text-left">
+                <div class="flex gap-4">
                     <div class="flex-1">
                         <label class="block text-sm font-900 text-blue-900 mb-2 ml-1">戰鬥分</label>
                         <input v-model.number="form.min" type="number" class="w-full border-2 border-blue-50 bg-blue-50/50 rounded-2xl px-4 py-3.5 outline-none font-900 text-blue-900">
@@ -96,7 +99,7 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-2 gap-4 text-left">
+                <div class="grid grid-cols-2 gap-4">
                     <div class="bg-teal-50/40 p-3 rounded-2xl border border-teal-50">
                         <label class="block text-[10px] font-900 text-teal-800 uppercase mb-1 ml-1">重生冷卻 (秒)</label>
                         <input v-model.number="form.respawnDuration" type="number" class="w-full bg-white border-2 border-teal-100 rounded-xl px-2 py-2 text-center font-900 text-teal-900 outline-none">
@@ -120,30 +123,39 @@
                     
                     <div class="flex justify-between items-start relative z-10">
                         <div>
-                            <h3 class="font-900 text-blue-950 text-xl leading-tight">{{ m.name || '未命名' }}</h3>
-                            <span :class="m.phase === 2 ? 'bg-teal-500 shadow-md shadow-teal-100' : 'bg-blue-500'" class="inline-block mt-2 text-white text-[10px] px-3 py-1 rounded-full uppercase font-black">
+                            <h3 class="font-900 text-blue-950 text-xl leading-tight line-clamp-1">{{ m.name || '未命名' }}</h3>
+                            <span :class="m.phase === 2 ? 'bg-teal-500 shadow-md shadow-teal-100' : 'bg-blue-500'" class="inline-block mt-2 text-white text-[10px] px-3 py-1 rounded-full uppercase font-black tracking-widest">
                                 {{ m.phase === 1 ? '⚔️ 戰鬥中' : '✨ 重生中' }}
                             </span>
                         </div>
                         <button @click="deleteMushroom(m.id)" class="text-slate-300 hover:text-red-500 p-2 transition-colors"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" /></svg></button>
                     </div>
 
-                    <div class="flex items-baseline gap-2 mb-5 relative z-10 mt-3 text-left">
+                    <div class="flex items-baseline gap-2 mb-5 relative z-10 mt-3">
                         <span class="text-5xl font-900 tabular-nums tracking-tighter" :class="m.phase === 2 ? 'text-teal-600 font-black' : 'text-blue-600'">{{ m.displayTime }}</span>
                         <span class="text-sm font-900 text-slate-400 uppercase tracking-tighter">{{ m.phase === 1 ? '後結束' : '後重生' }}</span>
                     </div>
 
-                    <div v-if="m.phase === 2 && !m.isExpired" class="bg-teal-50 rounded-3xl p-4 border border-teal-100 relative z-10 shadow-inner">
-                        <div class="flex items-center gap-2 mb-3">
-                            <span class="flex h-2 w-2 rounded-full bg-teal-500 animate-pulse"></span>
-                            <span class="text-[10px] font-black text-teal-800 uppercase tracking-widest">地圖刷新點 ({{ globalTick }}s)</span>
-                        </div>
-                        <div class="grid grid-cols-2 gap-3 font-mono font-900 text-teal-800 text-center">
-                            <div :key="m.nextTick" class="bg-white p-3 rounded-2xl text-base border border-teal-100 shadow-sm animate-ripple">
-                                {{ m.nextTick }}
+                    <!-- 修正 2: 雙對齊時間提示與進度條 -->
+                    <div v-if="m.phase === 2 && !m.isExpired" class="space-y-3 relative z-10">
+                        <div class="grid grid-cols-2 gap-3 font-mono font-900 text-center">
+                            <!-- 週期 A 卡片 -->
+                            <div class="bg-teal-50 rounded-2xl p-3 border border-teal-100 overflow-hidden relative">
+                                <p class="text-[9px] font-black text-teal-600 uppercase mb-1">對齊 {{ globalTickA }}s</p>
+                                <p :key="m.nextTickA" class="text-base text-teal-800 animate-ripple">{{ m.nextTickA }}</p>
+                                <!-- 小進度條 -->
+                                <div class="absolute bottom-0 left-0 w-full h-1 bg-teal-200/30">
+                                    <div class="h-full bg-teal-500 transition-all duration-100 linear" :style="{ width: m.tickProgressA + '%' }"></div>
+                                </div>
                             </div>
-                            <div class="bg-white/50 p-3 rounded-2xl text-base border border-teal-50 text-slate-400">
-                                {{ m.nextNextTick }}
+                            <!-- 週期 B 卡片 -->
+                            <div class="bg-blue-50 rounded-2xl p-3 border border-blue-100 overflow-hidden relative">
+                                <p class="text-[9px] font-black text-blue-600 uppercase mb-1">對齊 {{ globalTickB }}s</p>
+                                <p :key="m.nextTickB" class="text-base text-blue-800 animate-ripple">{{ m.nextTickB }}</p>
+                                <!-- 小進度條 -->
+                                <div class="absolute bottom-0 left-0 w-full h-1 bg-blue-200/30">
+                                    <div class="h-full bg-blue-500 transition-all duration-100 linear" :style="{ width: m.tickProgressB + '%' }"></div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -162,15 +174,10 @@
                     </div>
                 </div>
             </transition-group>
-
-            <div v-if="mushrooms.length === 0" class="text-center py-16 bg-white/30 rounded-[3rem] border-2 border-dashed border-blue-200">
-                <img :src="iconSvg" class="w-16 h-16 mx-auto mb-4 opacity-20 grayscale">
-                <p class="text-blue-900/30 font-900 tracking-widest uppercase text-sm">等待計時...</p>
-            </div>
         </div>
 
         <div class="fixed bottom-2 right-4 text-[10px] font-black text-blue-900/20 pointer-events-none tracking-widest safe-pb">
-            VER 17.0
+            VER 18.0
         </div>
     </div>
 
@@ -182,8 +189,10 @@
                 const mushrooms = ref([]);
                 const permissionStatus = ref('default');
                 const currentTime = ref(new Date());
-                const globalTick = ref(8);
-                const form = ref({ name: '', min: 0, sec: 0, notify: true, advance: 30, respawnDuration: 300 });
+                // 修正 3: 雙週期初始值
+                const globalTickA = ref(8);
+                const globalTickB = ref(10);
+                const form = ref({ name: '', min: 0, sec: 0, notify: true, advance: 60, respawnDuration: 300 });
 
                 const iconSvg = MUSHROOM_SVG;
 
@@ -192,21 +201,29 @@
                     return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}:${String(d.getSeconds()).padStart(2, '0')}`;
                 });
 
-                const handleTickInput = (e) => {
+                const handleTickInput = (e, type) => {
                     const val = e.target.value;
                     if (val === '') return;
                     const num = parseInt(val);
                     if (!isNaN(num) && num > 0) {
-                        globalTick.value = num;
-                        localStorage.setItem('pikmin_global_tick', num);
+                        if (type === 'A') {
+                            globalTickA.value = num;
+                            localStorage.setItem('pikmin_tick_a', num);
+                        } else {
+                            globalTickB.value = num;
+                            localStorage.setItem('pikmin_tick_b', num);
+                        }
                     }
                 };
 
-                const handleTickBlur = (e) => {
+                const handleTickBlur = (e, type) => {
                     if (e.target.value === '' || parseInt(e.target.value) <= 0) {
-                        const saved = localStorage.getItem('pikmin_global_tick');
-                        globalTick.value = saved ? parseInt(saved) : 8;
-                        e.target.value = globalTick.value;
+                        const key = type === 'A' ? 'pikmin_tick_a' : 'pikmin_tick_b';
+                        const def = type === 'A' ? 8 : 10;
+                        const saved = localStorage.getItem(key);
+                        if (type === 'A') globalTickA.value = saved ? parseInt(saved) : def;
+                        else globalTickB.value = saved ? parseInt(saved) : def;
+                        e.target.value = type === 'A' ? globalTickA.value : globalTickB.value;
                     }
                 };
 
@@ -217,21 +234,15 @@
                     }
                 };
 
-                // --- 核心圖示優化邏輯 ---
                 const sendNotification = (title, body) => {
                     if ('Notification' in window && Notification.permission === 'granted') {
                         navigator.serviceWorker.ready.then(reg => {
-                            reg.showNotification(title, {
-                                body: body,
-                                icon: iconSvg, // 確保大圖示是蘑菇 (Data URI)
-                                badge: iconSvg, // 確保狀態列小圖示也是蘑菇
-                                vibrate: [200, 100, 200]
-                            });
+                            reg.showNotification(title, { body, icon: iconSvg, badge: iconSvg, vibrate: [200, 100, 200] });
                         });
                     }
                 };
 
-                const testNotification = () => sendNotification("測試通知", "看到蘑菇圖示代表 v17 運作正常！🍄");
+                const testNotification = () => sendNotification("測試通知", "雙週期進度功能已就緒！🍄");
 
                 const addMushroom = () => {
                     const battleDurationMs = (form.value.min * 60 + form.value.sec) * 1000;
@@ -243,10 +254,11 @@
                         battleEndTime: now + battleDurationMs,
                         respawnEndTime: now + battleDurationMs + respawnMs,
                         respawnDuration: form.value.respawnDuration || 300,
-                        advanceSeconds: form.value.advance || 30,
+                        advanceSeconds: form.value.advance || 60,
                         notify: form.value.notify,
                         battleNotified: false, respawnNotified: false,
-                        phase: 1, isExpired: false, displayTime: '', progress: 0, nextTick: '', nextNextTick: ''
+                        phase: 1, isExpired: false, displayTime: '', progress: 0, 
+                        nextTickA: '', nextTickB: '', tickProgressA: 0, tickProgressB: 0
                     });
                     saveData();
                     form.value.name = ''; form.value.min = 0; form.value.sec = 0;
@@ -257,7 +269,7 @@
                     saveData();
                 };
 
-                const saveData = () => localStorage.setItem('pikmin_v17', JSON.stringify(mushrooms.value));
+                const saveData = () => localStorage.setItem('pikmin_v18', JSON.stringify(mushrooms.value));
 
                 const sortedMushrooms = computed(() => {
                     return [...mushrooms.value].sort((a, b) => {
@@ -282,7 +294,9 @@
                 const updateTimers = () => {
                     const now = Date.now();
                     currentTime.value = new Date();
-                    const cycleMs = (globalTick.value || 8) * 1000;
+                    const cycleAMs = (globalTickA.value || 8) * 1000;
+                    const cycleBMs = (globalTickB.value || 10) * 1000;
+
                     mushrooms.value.forEach(m => {
                         if (now < m.battleEndTime) {
                             m.phase = 1;
@@ -299,11 +313,24 @@
                             m.displayTime = formatTime(diff);
                             const totalRespawnMs = (m.respawnDuration || 300) * 1000;
                             m.progress = (diff / totalRespawnMs) * 100;
-                            let nextTickTs = now + (diff % cycleMs);
-                            if (nextTickTs <= now) nextTickTs += cycleMs;
-                            m.nextTick = formatTs(nextTickTs);
-                            m.nextNextTick = formatTs(nextTickTs + cycleMs);
-                            const advanceMs = (m.advanceSeconds || 30) * 1000;
+
+                            // 修正 2: 雙週期進度邏輯
+                            // 計算在當前週期剩餘多少毫秒
+                            const remainA = diff % cycleAMs;
+                            const remainB = diff % cycleBMs;
+                            
+                            m.tickProgressA = (remainA / cycleAMs) * 100;
+                            m.tickProgressB = (remainB / cycleBMs) * 100;
+
+                            let tsA = now + remainA;
+                            let tsB = now + remainB;
+                            if (tsA <= now) tsA += cycleAMs;
+                            if (tsB <= now) tsB += cycleBMs;
+
+                            m.nextTickA = formatTs(tsA);
+                            m.nextTickB = formatTs(tsB);
+
+                            const advanceMs = (m.advanceSeconds || 60) * 1000;
                             if (m.notify && !m.respawnNotified && diff <= advanceMs) {
                                 sendNotification(`🍄 重生預警`, `${m.name} 將在 ${m.advanceSeconds} 秒後重生！`);
                                 m.respawnNotified = true;
@@ -316,12 +343,17 @@
                 };
 
                 onMounted(() => {
-                    const saved = localStorage.getItem('pikmin_v17');
+                    const saved = localStorage.getItem('pikmin_v18');
                     if (saved) mushrooms.value = JSON.parse(saved);
-                    const savedTick = localStorage.getItem('pikmin_global_tick');
-                    if (savedTick) globalTick.value = parseInt(savedTick);
+                    
+                    const savedA = localStorage.getItem('pikmin_tick_a');
+                    const savedB = localStorage.getItem('pikmin_tick_b');
+                    if (savedA) globalTickA.value = parseInt(savedA);
+                    if (savedB) globalTickB.value = parseInt(savedB);
+
                     if ('Notification' in window) permissionStatus.value = Notification.permission;
-                    setInterval(updateTimers, 1000);
+                    setInterval(updateTimers, 100); // 提升精準度到 0.1s 以維持進度條平滑
+                    
                     if ('serviceWorker' in navigator) {
                         const base = window.location.pathname.split('/').slice(0, -1).join('/') + '/';
                         navigator.serviceWorker.register(base + 'sw.js', { scope: base });
@@ -330,7 +362,7 @@
                 });
 
                 return { 
-                    globalTick, form, mushrooms, sortedMushrooms, permissionStatus, iconSvg,
+                    globalTickA, globalTickB, form, mushrooms, sortedMushrooms, permissionStatus, iconSvg,
                     currentTimeDisplay, addMushroom, deleteMushroom, requestPermission, 
                     testNotification, handleTickInput, handleTickBlur 
                 };
