@@ -11,7 +11,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="皮克敏計時器">
     
-    <!-- 核心優化：內嵌向量 SVG 作為圖示 -->
+    <!-- 核心 SVG 圖示 -->
     <script>
         const MUSHROOM_SVG = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M15,55 Q15,15 50,15 Q85,15 85,55 L15,55' fill='%23ff4444'/%3E%3Ccircle cx='32' cy='30' r='6' fill='white'/%3E%3Ccircle cx='50' cy='42' r='5' fill='white'/%3E%3Ccircle cx='68' cy='30' r='6' fill='white'/%3E%3Crect x='40' y='55' width='20' height='30' rx='8' fill='%23fff5e6'/%3E%3C/svg%3E`;
         document.write(`<link rel="icon" href="${MUSHROOM_SVG}">`);
@@ -70,7 +70,7 @@
                     </div>
                     <div class="flex items-center gap-2">
                         <input :value="globalTick" @input="handleTickInput" @blur="handleTickBlur" type="number" 
-                            class="w-16 bg-blue-50 border-2 border-blue-100 rounded-xl px-2 py-2 text-center font-900 text-blue-900 outline-none focus:border-teal-400">
+                            class="w-16 bg-blue-50 border-2 border-blue-100 rounded-xl px-2 py-2 text-center font-900 text-blue-900 outline-none focus:border-teal-400 transition-colors">
                         <span class="font-bold text-blue-900 text-sm">秒</span>
                     </div>
                 </div>
@@ -111,7 +111,7 @@
             </div>
         </section>
 
-        <!-- Timer List -->
+        <!-- List Section -->
         <div class="space-y-4">
             <transition-group name="list" tag="div" class="space-y-4">
                 <div v-for="m in sortedMushrooms" :key="m.id" 
@@ -128,7 +128,7 @@
                         <button @click="deleteMushroom(m.id)" class="text-slate-300 hover:text-red-500 p-2 transition-colors"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" /></svg></button>
                     </div>
 
-                    <div class="flex items-baseline gap-2 mb-5 relative z-10 mt-3">
+                    <div class="flex items-baseline gap-2 mb-5 relative z-10 mt-3 text-left">
                         <span class="text-5xl font-900 tabular-nums tracking-tighter" :class="m.phase === 2 ? 'text-teal-600 font-black' : 'text-blue-600'">{{ m.displayTime }}</span>
                         <span class="text-sm font-900 text-slate-400 uppercase tracking-tighter">{{ m.phase === 1 ? '後結束' : '後重生' }}</span>
                     </div>
@@ -153,24 +153,24 @@
                     </div>
 
                     <div v-if="m.isExpired" class="absolute inset-0 bg-white/95 backdrop-blur-md flex flex-col items-center justify-center z-20">
-                        <div class="bg-white p-6 rounded-3xl shadow-xl border border-teal-100 flex flex-col items-center">
-                            <img :src="iconSvg" class="w-16 h-16 mb-2">
-                            <p class="text-teal-700 font-900 text-xl">重生完成！</p>
-                            <button @click="deleteMushroom(m.id)" class="mt-4 text-sm font-900 bg-blue-600 text-white px-8 py-3 rounded-2xl shadow-lg active:scale-95 transition-transform">移除紀錄</button>
+                        <div class="bg-white p-6 rounded-3xl shadow-xl border border-teal-100 flex flex-col items-center max-w-[85%]">
+                            <img :src="iconSvg" class="w-12 h-12 mb-2">
+                            <h4 class="text-blue-950 font-900 text-lg mb-1 line-clamp-1 text-center">{{ m.name || '未命名蘑菇' }}</h4>
+                            <p class="text-teal-600 font-900 text-base mb-4 tracking-widest">✨ 重生完成！</p>
+                            <button @click="deleteMushroom(m.id)" class="text-sm font-900 bg-blue-600 text-white px-8 py-3 rounded-2xl shadow-lg active:scale-95 transition-transform tracking-widest">移除紀錄</button>
                         </div>
                     </div>
                 </div>
             </transition-group>
-            
+
             <div v-if="mushrooms.length === 0" class="text-center py-16 bg-white/30 rounded-[3rem] border-2 border-dashed border-blue-200">
                 <img :src="iconSvg" class="w-16 h-16 mx-auto mb-4 opacity-20 grayscale">
                 <p class="text-blue-900/30 font-900 tracking-widest uppercase text-sm">等待計時...</p>
             </div>
         </div>
 
-        <!-- 浮動版號顯示：固定於右下角 -->
         <div class="fixed bottom-2 right-4 text-[10px] font-black text-blue-900/20 pointer-events-none tracking-widest safe-pb">
-            VER 16.0
+            VER 17.0
         </div>
     </div>
 
@@ -217,19 +217,21 @@
                     }
                 };
 
+                // --- 核心圖示優化邏輯 ---
                 const sendNotification = (title, body) => {
                     if ('Notification' in window && Notification.permission === 'granted') {
                         navigator.serviceWorker.ready.then(reg => {
                             reg.showNotification(title, {
-                                body,
-                                icon: iconSvg,
+                                body: body,
+                                icon: iconSvg, // 確保大圖示是蘑菇 (Data URI)
+                                badge: iconSvg, // 確保狀態列小圖示也是蘑菇
                                 vibrate: [200, 100, 200]
                             });
                         });
                     }
                 };
 
-                const testNotification = () => sendNotification("測試通知", "通知系統正常運作中 🍄");
+                const testNotification = () => sendNotification("測試通知", "看到蘑菇圖示代表 v17 運作正常！🍄");
 
                 const addMushroom = () => {
                     const battleDurationMs = (form.value.min * 60 + form.value.sec) * 1000;
@@ -255,7 +257,7 @@
                     saveData();
                 };
 
-                const saveData = () => localStorage.setItem('pikmin_v16', JSON.stringify(mushrooms.value));
+                const saveData = () => localStorage.setItem('pikmin_v17', JSON.stringify(mushrooms.value));
 
                 const sortedMushrooms = computed(() => {
                     return [...mushrooms.value].sort((a, b) => {
@@ -314,7 +316,7 @@
                 };
 
                 onMounted(() => {
-                    const saved = localStorage.getItem('pikmin_v16');
+                    const saved = localStorage.getItem('pikmin_v17');
                     if (saved) mushrooms.value = JSON.parse(saved);
                     const savedTick = localStorage.getItem('pikmin_global_tick');
                     if (savedTick) globalTick.value = parseInt(savedTick);

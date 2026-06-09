@@ -8,7 +8,7 @@
   "theme_color": "#2563eb",
   "icons": [
     {
-      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M20,50 Q20,20 50,20 Q80,20 80,50 L20,50' fill='%23ff4d4d'/%3E%3Ccircle cx='35' cy='32' r='5' fill='white'/%3E%3Ccircle cx='50' cy='42' r='4' fill='white'/%3E%3Ccircle cx='65' cy='32' r='5' fill='white'/%3E%3Crect x='42' y='50' width='16' height='25' rx='5' fill='%23fdf5e6'/%3E%3C/svg%3E",
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M15,55 Q15,15 50,15 Q85,15 85,55 L15,55' fill='%23ff4444'/%3E%3Ccircle cx='32' cy='30' r='6' fill='white'/%3E%3Ccircle cx='50' cy='42' r='5' fill='white'/%3E%3Ccircle cx='68' cy='30' r='6' fill='white'/%3E%3Crect x='40' y='55' width='20' height='30' rx='8' fill='%23fff5e6'/%3E%3C/svg%3E",
       "sizes": "192x192",
       "type": "image/svg+xml"
     }
