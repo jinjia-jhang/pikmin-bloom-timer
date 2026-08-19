@@ -177,12 +177,12 @@
         </div>
 
         <div class="fixed bottom-2 right-4 text-[10px] font-black text-blue-900/20 pointer-events-none tracking-widest safe-pb">
-            VER 18.0
+            VER 19.0
         </div>
     </div>
 
     <script>
-        const { createApp, ref, onMounted, computed, watch } = Vue;
+        const { createApp, ref, onMounted, onBeforeUnmount, computed, watch } = Vue;
 
         createApp({
             setup() {
@@ -287,13 +287,13 @@
                 };
 
                 const formatTime = (ms) => {
-                    const s = Math.max(0, Math.floor(ms / 1000));
+                    const s = Math.max(0, Math.ceil(ms / 1000));
                     return `${String(Math.floor(s/60)).padStart(2, '0')}:${String(s%60).padStart(2, '0')}`;
                 };
 
                 const updateTimers = () => {
                     const now = Date.now();
-                    currentTime.value = new Date();
+                    currentTime.value = new Date(now);
                     const cycleAMs = (globalTickA.value || 8) * 1000;
                     const cycleBMs = (globalTickB.value || 10) * 1000;
 
@@ -342,6 +342,29 @@
                     });
                 };
 
+                let timerId = null;
+                let wakeLock = null;
+                let wakeLockRequesting = false;
+
+                const requestWakeLock = async () => {
+                    if (!('wakeLock' in navigator) || document.visibilityState !== 'visible') return;
+                    if (wakeLockRequesting || (wakeLock && !wakeLock.released)) return;
+                    wakeLockRequesting = true;
+                    try {
+                        wakeLock = await navigator.wakeLock.request('screen');
+                    } catch (_) {
+                    } finally {
+                        wakeLockRequesting = false;
+                    }
+                };
+
+                // 瀏覽器從背景、休眠或 BFCache 恢復時，立即以時間戳重新校正畫面。
+                const synchronizeTimers = () => {
+                    if (document.visibilityState !== 'visible') return;
+                    updateTimers();
+                    requestWakeLock();
+                };
+
                 onMounted(() => {
                     const saved = localStorage.getItem('pikmin_v18');
                     if (saved) mushrooms.value = JSON.parse(saved);
@@ -352,13 +375,27 @@
                     if (savedB) globalTickB.value = parseInt(savedB);
 
                     if ('Notification' in window) permissionStatus.value = Notification.permission;
-                    setInterval(updateTimers, 100); // 提升精準度到 0.1s 以維持進度條平滑
+
+                    // interval 只負責刷新畫面，所有時間仍以 Date.now() 與結束時間戳為準。
+                    updateTimers();
+                    timerId = window.setInterval(updateTimers, 100);
+                    document.addEventListener('visibilitychange', synchronizeTimers);
+                    window.addEventListener('focus', synchronizeTimers);
+                    window.addEventListener('pageshow', synchronizeTimers);
                     
                     if ('serviceWorker' in navigator) {
                         const base = window.location.pathname.split('/').slice(0, -1).join('/') + '/';
                         navigator.serviceWorker.register(base + 'sw.js', { scope: base });
                     }
-                    if ('wakeLock' in navigator) navigator.wakeLock.request('screen').catch(()=>{});
+                    requestWakeLock();
+                });
+
+                onBeforeUnmount(() => {
+                    if (timerId !== null) window.clearInterval(timerId);
+                    document.removeEventListener('visibilitychange', synchronizeTimers);
+                    window.removeEventListener('focus', synchronizeTimers);
+                    window.removeEventListener('pageshow', synchronizeTimers);
+                    if (wakeLock && !wakeLock.released) wakeLock.release().catch(() => {});
                 });
 
                 return { 
