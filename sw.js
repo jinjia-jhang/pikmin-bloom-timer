@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pikmin-v19';
+const CACHE_NAME = 'pikmin-v20';
 const CACHE_PREFIX = 'pikmin-v';
 const ASSETS = ['./', './index.html', './manifest.json'];
 self.addEventListener('install', (e) => {

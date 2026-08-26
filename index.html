@@ -64,17 +64,36 @@
                     </div>
                 </div>
 
-                <!-- 修正 3: 雙週期設定區 -->
-                <div class="pt-4 border-t border-blue-50 grid grid-cols-2 gap-4">
-                    <div class="flex flex-col gap-1">
-                        <span class="text-[10px] font-black text-teal-700 uppercase tracking-widest">週期 A (秒)</span>
-                        <input :value="globalTickA" @input="e => handleTickInput(e, 'A')" @blur="e => handleTickBlur(e, 'A')" type="number" 
-                            class="w-full bg-blue-50 border-2 border-blue-100 rounded-xl px-2 py-2 text-center font-900 text-blue-900 outline-none focus:border-teal-400 transition-colors">
+                <!-- 兩支手機可分別設定啟動耗時與地圖刷新週期。 -->
+                <div class="pt-4 border-t border-blue-50 grid grid-cols-2 gap-3">
+                    <p class="col-span-2 text-[10px] font-bold text-slate-500 leading-relaxed">
+                        啟動預留時間＝點擊遊戲到進入主畫面的時間；地圖刷新週期預設為 8 秒。
+                    </p>
+                    <div class="bg-teal-50/60 rounded-2xl p-3 border border-teal-100 space-y-3">
+                        <p class="text-xs font-black text-teal-700 uppercase tracking-widest text-center">手機 A</p>
+                        <div class="flex flex-col gap-1">
+                            <span class="text-[9px] font-black text-teal-700 uppercase tracking-wider">啟動預留時間 (秒)</span>
+                            <input :value="deviceA.startupBuffer" @input="e => handleDeviceInput(e, 'A', 'startupBuffer')" @blur="e => handleDeviceBlur(e, 'A', 'startupBuffer')" type="number" min="0"
+                                class="w-full bg-white border-2 border-teal-100 rounded-xl px-2 py-2 text-center font-900 text-teal-900 outline-none focus:border-teal-400 transition-colors">
+                        </div>
+                        <div class="flex flex-col gap-1">
+                            <span class="text-[9px] font-black text-teal-700 uppercase tracking-wider">地圖刷新週期 (秒)</span>
+                            <input :value="deviceA.refreshCycle" @input="e => handleDeviceInput(e, 'A', 'refreshCycle')" @blur="e => handleDeviceBlur(e, 'A', 'refreshCycle')" type="number" min="1"
+                                class="w-full bg-white border-2 border-teal-100 rounded-xl px-2 py-2 text-center font-900 text-teal-900 outline-none focus:border-teal-400 transition-colors">
+                        </div>
                     </div>
-                    <div class="flex flex-col gap-1">
-                        <span class="text-[10px] font-black text-blue-700 uppercase tracking-widest">週期 B (秒)</span>
-                        <input :value="globalTickB" @input="e => handleTickInput(e, 'B')" @blur="e => handleTickBlur(e, 'B')" type="number" 
-                            class="w-full bg-blue-50 border-2 border-blue-100 rounded-xl px-2 py-2 text-center font-900 text-blue-900 outline-none focus:border-blue-400 transition-colors">
+                    <div class="bg-blue-50/60 rounded-2xl p-3 border border-blue-100 space-y-3">
+                        <p class="text-xs font-black text-blue-700 uppercase tracking-widest text-center">手機 B</p>
+                        <div class="flex flex-col gap-1">
+                            <span class="text-[9px] font-black text-blue-700 uppercase tracking-wider">啟動預留時間 (秒)</span>
+                            <input :value="deviceB.startupBuffer" @input="e => handleDeviceInput(e, 'B', 'startupBuffer')" @blur="e => handleDeviceBlur(e, 'B', 'startupBuffer')" type="number" min="0"
+                                class="w-full bg-white border-2 border-blue-100 rounded-xl px-2 py-2 text-center font-900 text-blue-900 outline-none focus:border-blue-400 transition-colors">
+                        </div>
+                        <div class="flex flex-col gap-1">
+                            <span class="text-[9px] font-black text-blue-700 uppercase tracking-wider">地圖刷新週期 (秒)</span>
+                            <input :value="deviceB.refreshCycle" @input="e => handleDeviceInput(e, 'B', 'refreshCycle')" @blur="e => handleDeviceBlur(e, 'B', 'refreshCycle')" type="number" min="1"
+                                class="w-full bg-white border-2 border-blue-100 rounded-xl px-2 py-2 text-center font-900 text-blue-900 outline-none focus:border-blue-400 transition-colors">
+                        </div>
                     </div>
                 </div>
             </div>
@@ -136,25 +155,23 @@
                         <span class="text-sm font-900 text-slate-400 uppercase tracking-tighter">{{ m.phase === 1 ? '後結束' : '後重生' }}</span>
                     </div>
 
-                    <!-- 修正 2: 雙對齊時間提示與進度條 -->
+                    <!-- 依兩支手機的設定，分別提示下一個建議點擊開啟遊戲的時間。 -->
                     <div v-if="m.phase === 2 && !m.isExpired" class="space-y-3 relative z-10">
                         <div class="grid grid-cols-2 gap-3 font-mono font-900 text-center">
-                            <!-- 週期 A 卡片 -->
                             <div class="bg-teal-50 rounded-2xl p-3 border border-teal-100 overflow-hidden relative">
-                                <p class="text-[9px] font-black text-teal-600 uppercase mb-1">對齊 {{ globalTickA }}s</p>
-                                <p :key="m.nextTickA" class="text-base text-teal-800 animate-ripple">{{ m.nextTickA }}</p>
-                                <!-- 小進度條 -->
+                                <p class="text-[9px] font-black text-teal-600 uppercase mb-1">手機 A 建議開啟</p>
+                                <p :key="m.nextLaunchA" class="text-base text-teal-800 animate-ripple">{{ m.nextLaunchA }}</p>
+                                <p class="text-[8px] font-sans font-black text-teal-600/70 mt-1">預留 {{ deviceA.startupBuffer }}s・刷新 {{ deviceA.refreshCycle }}s</p>
                                 <div class="absolute bottom-0 left-0 w-full h-1 bg-teal-200/30">
-                                    <div class="h-full bg-teal-500 transition-all duration-100 linear" :style="{ width: m.tickProgressA + '%' }"></div>
+                                    <div class="h-full bg-teal-500 transition-all duration-100 linear" :style="{ width: m.launchProgressA + '%' }"></div>
                                 </div>
                             </div>
-                            <!-- 週期 B 卡片 -->
                             <div class="bg-blue-50 rounded-2xl p-3 border border-blue-100 overflow-hidden relative">
-                                <p class="text-[9px] font-black text-blue-600 uppercase mb-1">對齊 {{ globalTickB }}s</p>
-                                <p :key="m.nextTickB" class="text-base text-blue-800 animate-ripple">{{ m.nextTickB }}</p>
-                                <!-- 小進度條 -->
+                                <p class="text-[9px] font-black text-blue-600 uppercase mb-1">手機 B 建議開啟</p>
+                                <p :key="m.nextLaunchB" class="text-base text-blue-800 animate-ripple">{{ m.nextLaunchB }}</p>
+                                <p class="text-[8px] font-sans font-black text-blue-600/70 mt-1">預留 {{ deviceB.startupBuffer }}s・刷新 {{ deviceB.refreshCycle }}s</p>
                                 <div class="absolute bottom-0 left-0 w-full h-1 bg-blue-200/30">
-                                    <div class="h-full bg-blue-500 transition-all duration-100 linear" :style="{ width: m.tickProgressB + '%' }"></div>
+                                    <div class="h-full bg-blue-500 transition-all duration-100 linear" :style="{ width: m.launchProgressB + '%' }"></div>
                                 </div>
                             </div>
                         </div>
@@ -177,7 +194,7 @@
         </div>
 
         <div class="fixed bottom-2 right-4 text-[10px] font-black text-blue-900/20 pointer-events-none tracking-widest safe-pb">
-            VER 19.0
+            VER 20.0
         </div>
     </div>
 
@@ -189,9 +206,8 @@
                 const mushrooms = ref([]);
                 const permissionStatus = ref('default');
                 const currentTime = ref(new Date());
-                // 修正 3: 雙週期初始值
-                const globalTickA = ref(8);
-                const globalTickB = ref(10);
+                const deviceA = ref({ startupBuffer: 2, refreshCycle: 8 });
+                const deviceB = ref({ startupBuffer: 2, refreshCycle: 8 });
                 const form = ref({ name: '', min: 0, sec: 0, notify: true, advance: 60, respawnDuration: 300 });
 
                 const iconSvg = MUSHROOM_SVG;
@@ -201,29 +217,33 @@
                     return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}:${String(d.getSeconds()).padStart(2, '0')}`;
                 });
 
-                const handleTickInput = (e, type) => {
+                const getDevice = (type) => type === 'A' ? deviceA : deviceB;
+
+                const getDeviceStorageKey = (type, field) => {
+                    const suffix = field === 'startupBuffer' ? 'startup_buffer' : 'refresh_cycle';
+                    return `pikmin_device_${type.toLowerCase()}_${suffix}`;
+                };
+
+                const handleDeviceInput = (e, type, field) => {
                     const val = e.target.value;
                     if (val === '') return;
                     const num = parseInt(val);
-                    if (!isNaN(num) && num > 0) {
-                        if (type === 'A') {
-                            globalTickA.value = num;
-                            localStorage.setItem('pikmin_tick_a', num);
-                        } else {
-                            globalTickB.value = num;
-                            localStorage.setItem('pikmin_tick_b', num);
-                        }
+                    const isValid = field === 'startupBuffer' ? num >= 0 : num > 0;
+                    if (!isNaN(num) && isValid) {
+                        getDevice(type).value[field] = num;
+                        localStorage.setItem(getDeviceStorageKey(type, field), num);
                     }
                 };
 
-                const handleTickBlur = (e, type) => {
-                    if (e.target.value === '' || parseInt(e.target.value) <= 0) {
-                        const key = type === 'A' ? 'pikmin_tick_a' : 'pikmin_tick_b';
-                        const def = type === 'A' ? 8 : 10;
+                const handleDeviceBlur = (e, type, field) => {
+                    const num = parseInt(e.target.value);
+                    const isInvalid = e.target.value === '' || isNaN(num) || (field === 'startupBuffer' ? num < 0 : num <= 0);
+                    if (isInvalid) {
+                        const key = getDeviceStorageKey(type, field);
+                        const defaultValue = field === 'startupBuffer' ? 2 : 8;
                         const saved = localStorage.getItem(key);
-                        if (type === 'A') globalTickA.value = saved ? parseInt(saved) : def;
-                        else globalTickB.value = saved ? parseInt(saved) : def;
-                        e.target.value = type === 'A' ? globalTickA.value : globalTickB.value;
+                        getDevice(type).value[field] = saved !== null ? parseInt(saved) : defaultValue;
+                        e.target.value = getDevice(type).value[field];
                     }
                 };
 
@@ -242,7 +262,7 @@
                     }
                 };
 
-                const testNotification = () => sendNotification("測試通知", "雙週期進度功能已就緒！🍄");
+                const testNotification = () => sendNotification("測試通知", "雙手機開啟時間提醒已就緒！🍄");
 
                 const addMushroom = () => {
                     const battleDurationMs = (form.value.min * 60 + form.value.sec) * 1000;
@@ -257,8 +277,8 @@
                         advanceSeconds: form.value.advance || 60,
                         notify: form.value.notify,
                         battleNotified: false, respawnNotified: false,
-                        phase: 1, isExpired: false, displayTime: '', progress: 0, 
-                        nextTickA: '', nextTickB: '', tickProgressA: 0, tickProgressB: 0
+                        phase: 1, isExpired: false, displayTime: '', progress: 0,
+                        nextLaunchA: '', nextLaunchB: '', launchProgressA: 0, launchProgressB: 0
                     });
                     saveData();
                     form.value.name = ''; form.value.min = 0; form.value.sec = 0;
@@ -291,11 +311,27 @@
                     return `${String(Math.floor(s/60)).padStart(2, '0')}:${String(s%60).padStart(2, '0')}`;
                 };
 
+                // N 從 1 開始：進入主畫面後需經過一個完整週期，才會在蘑菇出生時刷新地圖。
+                const calculateNextLaunch = (respawnEndTime, now, settings) => {
+                    const cycleMs = (settings.refreshCycle || 8) * 1000;
+                    const bufferMs = Math.max(0, settings.startupBuffer || 0) * 1000;
+                    const latestLaunchTime = respawnEndTime - cycleMs - bufferMs;
+
+                    if (now >= latestLaunchTime) {
+                        return { label: '立即開啟', progress: 0 };
+                    }
+
+                    const untilLatestLaunch = latestLaunchTime - now;
+                    const waitMs = untilLatestLaunch % cycleMs;
+                    return {
+                        label: formatTs(now + waitMs),
+                        progress: (waitMs / cycleMs) * 100
+                    };
+                };
+
                 const updateTimers = () => {
                     const now = Date.now();
                     currentTime.value = new Date(now);
-                    const cycleAMs = (globalTickA.value || 8) * 1000;
-                    const cycleBMs = (globalTickB.value || 10) * 1000;
 
                     mushrooms.value.forEach(m => {
                         if (now < m.battleEndTime) {
@@ -314,21 +350,12 @@
                             const totalRespawnMs = (m.respawnDuration || 300) * 1000;
                             m.progress = (diff / totalRespawnMs) * 100;
 
-                            // 修正 2: 雙週期進度邏輯
-                            // 計算在當前週期剩餘多少毫秒
-                            const remainA = diff % cycleAMs;
-                            const remainB = diff % cycleBMs;
-                            
-                            m.tickProgressA = (remainA / cycleAMs) * 100;
-                            m.tickProgressB = (remainB / cycleBMs) * 100;
-
-                            let tsA = now + remainA;
-                            let tsB = now + remainB;
-                            if (tsA <= now) tsA += cycleAMs;
-                            if (tsB <= now) tsB += cycleBMs;
-
-                            m.nextTickA = formatTs(tsA);
-                            m.nextTickB = formatTs(tsB);
+                            const launchA = calculateNextLaunch(m.respawnEndTime, now, deviceA.value);
+                            const launchB = calculateNextLaunch(m.respawnEndTime, now, deviceB.value);
+                            m.nextLaunchA = launchA.label;
+                            m.nextLaunchB = launchB.label;
+                            m.launchProgressA = launchA.progress;
+                            m.launchProgressB = launchB.progress;
 
                             const advanceMs = (m.advanceSeconds || 60) * 1000;
                             if (m.notify && !m.respawnNotified && diff <= advanceMs) {
@@ -369,10 +396,18 @@
                     const saved = localStorage.getItem('pikmin_v18');
                     if (saved) mushrooms.value = JSON.parse(saved);
                     
-                    const savedA = localStorage.getItem('pikmin_tick_a');
-                    const savedB = localStorage.getItem('pikmin_tick_b');
-                    if (savedA) globalTickA.value = parseInt(savedA);
-                    if (savedB) globalTickB.value = parseInt(savedB);
+                    ['A', 'B'].forEach(type => {
+                        ['startupBuffer', 'refreshCycle'].forEach(field => {
+                            const saved = localStorage.getItem(getDeviceStorageKey(type, field));
+                            if (saved !== null) getDevice(type).value[field] = parseInt(saved);
+                        });
+                    });
+
+                    // 沿用舊版已儲存的週期設定，避免升級後覆蓋使用者數值。
+                    const legacyTickA = localStorage.getItem('pikmin_tick_a');
+                    const legacyTickB = localStorage.getItem('pikmin_tick_b');
+                    if (legacyTickA && localStorage.getItem(getDeviceStorageKey('A', 'refreshCycle')) === null) deviceA.value.refreshCycle = parseInt(legacyTickA);
+                    if (legacyTickB && localStorage.getItem(getDeviceStorageKey('B', 'refreshCycle')) === null) deviceB.value.refreshCycle = parseInt(legacyTickB);
 
                     if ('Notification' in window) permissionStatus.value = Notification.permission;
 
@@ -399,9 +434,9 @@
                 });
 
                 return { 
-                    globalTickA, globalTickB, form, mushrooms, sortedMushrooms, permissionStatus, iconSvg,
+                    deviceA, deviceB, form, mushrooms, sortedMushrooms, permissionStatus, iconSvg,
                     currentTimeDisplay, addMushroom, deleteMushroom, requestPermission, 
-                    testNotification, handleTickInput, handleTickBlur 
+                    testNotification, handleDeviceInput, handleDeviceBlur
                 };
             }
         }).mount('#app');
